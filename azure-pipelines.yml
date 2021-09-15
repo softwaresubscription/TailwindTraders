@@ -1,19 +1,38 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
-trigger:
-- master
-
-pool:
-  vmImage: ubuntu-latest
+variables:
+  azureSubscription: <<Connection-name-of your-ARM endpoint>>
+  resourcegroup: <<name-of-your-resource-group>>
+  location: <<location of your resources>>
+  ImageName: website
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+- task: AzureResourceGroupDeployment@2
+  displayName: Azure Deployment
+  inputs:
+    azureSubscription: $(azureSubscription)
+    resourceGroupName: $(resourcegroup)
+    location: $(location)
+    csmFile: Deploy/deployment.json
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+- task: keesschollaart.arm-outputs.arm-outputs.ARM Outputs@5
+  displayName: ARM Outputs
+  inputs:
+    ConnectedServiceNameARM: $(azureSubscription)
+    resourceGroupName: $(resourcegroup)
+
+- task: Docker@1
+  displayName: 'Build an image'
+  inputs:
+    azureSubscriptionEndpoint: $(azureSubscription)
+    azureContainerRegistry: $(acr).azurecr.io
+    dockerFile: Source/Tailwind.Traders.Web/Dockerfile
+    arguments: '-t $(acr).azurecr.io/$(ImageName):$(Build.BuildId)'
+    imageName: '$(ImageName):$(Build.BuildId)'
+    includeLatestTag: true
+
+- task: Docker@1
+  displayName: 'Push Image'
+  inputs:
+    azureSubscriptionEndpoint: $(azureSubscription)
+    azureContainerRegistry: '$(acr).azurecr.io'
+    command: 'Push an image'
+    imageName: '$(ImageName):$(Build.BuildId)'
