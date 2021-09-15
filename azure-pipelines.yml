@@ -1,7 +1,7 @@
 variables:
-  azureSubscription: <<Connection-name-of your-ARM endpoint>>
-  resourcegroup: <<name-of-your-resource-group>>
-  location: <<location of your resources>>
+  azureSubscription: internal
+  resourcegroup: bgp-tt-app
+  location: Central US
   ImageName: website
 
 steps:
